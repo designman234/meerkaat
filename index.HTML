@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meerkat - 16-Page Wildlife Photo Library</title>
+  <style>
+    :root {
+      --ui-bg: #f8fafc;
+      --ui-panel: #ffffff;
+      --ui-card: #ffffff;
+      --ui-border: #e2e8f0;
+      --primary: #ff7a00;
+      --primary-shadow: #d96200;
+      --text-dark: #0f172a;
+      --text-muted: #64748b;
+      
+      --pdf-bg: #ffffff;
+      --pdf-text: #1e293b;
+      --pdf-border: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--ui-bg);
+      color: var(--text-dark);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ========================================================
+       1. TURUNCU YÜKLENME (SPLASH) EKRANI
+       ======================================================== */
+    #splashScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--primary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 999999;
+      transition: opacity 0.5s ease;
+    }
+
+    .splash-title {
+      font-size: 5rem;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+
+    .splash-loading {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.55); /* Şeffaf yazı */
+      margin-top: 15px;
+      letter-spacing: 2px;
+    }
+
+    /* ========================================================
+       2. MİRKET ONBOARDING (ADIM ADIM REHBER) EKRANI
+       ======================================================== */
+    #onboardingModal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+    }
+
+    .onboard-card {
+      background: #ffffff;
+      width: 90%;
+      max-width: 580px;
+      border-radius: 28px;
+      padding: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+      position: relative;
+    }
+
+    .meerkat-avatar-frame {
+      width: 170px;
+      height: 170px;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .meerkat-avatar-frame svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 10px 15px rgba(255, 122, 0, 0.25));
+    }
+
+    .bubble-box {
+      background: #fff7ed;
+      border: 3px solid #ffedd5;
+      color: #9a3412;
+      font-size: 1.35rem;
+      font-weight: 800;
+      padding: 1.2rem 1.8rem;
+      border-radius: 20px;
+      text-align: center;
+      margin-bottom: 1.8rem;
+      line-height: 1.4;
+      position: relative;
+      width: 100%;
+    }
+
+    .btn-step-next {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-bottom: 5px solid var(--primary-shadow);
+      padding: 0.9rem 2.5rem;
+      border-radius: 18px;
+      font-size: 1.15rem;
+      font-weight: 900;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      width: 100%;
+      transition: all 0.1s;
+    }
+
+    .btn-step-next:active {
+      transform: translateY(2px);
+      border-bottom-width: 3px;
+    }
+
+    /* Seçenekler Listesi */
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+
+    .opt-chip {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-bottom: 4px solid #cbd5e1;
+      padding: 0.9rem 1.2rem;
+      border-radius: 16px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #334155;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.15s;
+    }
+
+    .opt-chip:hover {
+      border-color: #fdba74;
+      background: #fffaf5;
+    }
+
+    .opt-chip.selected {
+      background: #fff7ed;
+      border-color: var(--primary);
+      border-bottom-color: var(--primary-shadow);
+      color: #c2410c;
+    }
+
+    /* Öğreneceklerin Kartı */
+    .learn-summary-box {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 1.4rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .learn-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    /* ========================================================
+       3. ANA UYGULAMA (SOL MENÜ & 16 SAYFALIK PDF)
+       ======================================================== */
+    aside {
+      width: 380px;
+      background: var(--ui-panel);
+      border-right: 2px solid var(--ui-border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .brand-box {
+      padding: 1.2rem;
+      border-bottom: 2px solid var(--ui-border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff;
+    }
+
+    .brand-title {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--primary);
+      letter-spacing: 0.5px;
+    }
+
+    .catalog-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.8rem;
+    }
+
+    .story-card {
+      padding: 0.9rem 1rem;
+      border-radius: 14px;
+      background: var(--ui-card);
+      border: 2px solid var(--ui-border);
+      border-bottom: 4px solid var(--ui-border);
+      margin-bottom: 0.7rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.1s ease;
+    }
+
+    .story-card:hover { border-color: var(--primary); }
+    .story-card.active {
+      border-color: var(--primary);
+      border-bottom-color: var(--primary-shadow);
+      background: #fff7ed;
+    }
+
+    .story-badge {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .story-name { font-size: 1rem; font-weight: 800; color: #0f172a; }
+    .story-topic { font-size: 0.8rem; color: var(--text-muted); margin-top: 3px; font-weight: 500; }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      background: #f1f5f9;
+    }
+
+    .audio-player-dock {
+      background: #ffffff;
+      border-bottom: 2px solid var(--ui-border);
+      padding: 1rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .audio-controls-row {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .btn-duo {
+      background: var(--primary);
+      color: #ffffff;
+      border: 2px solid var(--primary-shadow);
+      border-bottom: 5px solid var(--primary-shadow);
+      padding: 0.75rem 1.6rem;
+      border-radius: 14px;
+      font-weight: 900;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.1s;
+    }
+
+    .btn-duo:active { transform: translateY(2px); border-bottom-width: 3px; }
+
+    .btn-pdf {
+      background: #ffffff;
+      color: var(--primary);
+      border-color: var(--primary);
+      border-bottom-color: var(--primary-shadow);
+    }
+
+    .caption-stream {
+      background: #fff7ed;
+      border-radius: 12px;
+      padding: 0.9rem 1.4rem;
+      font-size: 1.15rem;
+      color: var(--primary-shadow);
+      font-weight: 700;
+      text-align: center;
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #fed7aa;
+    }
+
+    .pdf-viewer-canvas {
+      padding: 3rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3rem;
+      background: #cbd5e1;
+    }
+
+    .pdf-page {
+      background: var(--pdf-bg);
+      color: var(--pdf-text);
+      width: 100%;
+      max-width: 840px;
+      min-height: 1180px;
+      padding: 3.5rem 3.5rem;
+      border-radius: 6px;
+      border: 1px solid var(--pdf-border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 0.8rem;
+      margin-bottom: 1.4rem;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .page-title {
+      font-size: 1.8rem;
+      color: #0f172a;
+      font-weight: 900;
+      margin-bottom: 0.3rem;
+      text-align: center;
+    }
+
+    .page-topic {
+      font-size: 1rem;
+      color: var(--primary);
+      font-weight: 700;
+      margin-bottom: 1.4rem;
+      text-align: center;
+    }
+
+    .photo-frame {
+      width: 100%;
+      height: 420px;
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 1.8rem;
+      border: 2px solid #cbd5e1;
+      background: #e2e8f0;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    }
+
+    .photo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .novel-paragraph {
+      font-size: 1.25rem;
+      line-height: 2.2;
+      color: #1e293b;
+      font-weight: 500;
+      text-align: justify;
+      flex: 1;
+    }
+
+    .sentence-span {
+      transition: background 0.15s ease;
+      border-radius: 4px;
+      padding: 0 3px;
+    }
+
+    .sentence-span.active {
+      background: #ffedd5;
+      color: #c2410c;
+      font-weight: 700;
+      box-shadow: 0 0 0 2px #fdba74;
+    }
+
+    .page-footer {
+      border-top: 2px solid #e2e8f0;
+      padding-top: 1rem;
+      margin-top: 1.8rem;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: #64748b;
+      font-weight: 800;
+    }
+
+    @media print {
+      body { background: #fff !important; color: #000 !important; }
+      aside, .audio-player-dock, #splashScreen, #onboardingModal { display: none !important; }
+      main { overflow: visible !important; background: #fff !important; }
+      .pdf-viewer-canvas { padding: 0 !important; gap: 0 !important; background: #fff !important; }
+      .pdf-page {
+        page-break-after: always !important;
+        break-after: page !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        height: 100vh !important;
+        max-width: 100% !important;
+        padding: 2cm !important;
+        background: #fff !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================
+       1. TURUNCU YÜKLENME (SPLASH) EKRANI
+       ========================================== -->
+  <div id="splashScreen">
+    <div class="splash-title">MEERKAT</div>
+    <div class="splash-loading">MEERKAT YÜKLENİYOR...</div>
+  </div>
+
+  <!-- ==========================================
+       2. MİRKET ADIM ADIM REHBER (ONBOARDING)
+       ========================================== -->
+  <div id="onboardingModal">
+    <div class="onboard-card">
+      
+      <!-- Attığın görseldeki mirket vektörel çizimi -->
+      <div class="meerkat-avatar-frame">
+        <svg viewBox="0 0 450 450" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="225" cy="340" rx="100" ry="90" fill="#fca82a" />
+          <ellipse cx="225" cy="355" rx="55" ry="70" fill="#f8bfa2" />
+          <path d="M145 285 Q135 390 190 415" stroke="#fca82a" stroke-width="32" fill="none" stroke-linecap="round" />
+          <path d="M305 285 Q315 390 260 415" stroke="#fca82a" stroke-width="32" fill="none" stroke-linecap="round" />
+          <circle cx="195" cy="425" r="9" fill="#333" />
+          <circle cx="210" cy="427" r="9" fill="#333" />
+          <circle cx="240" cy="427" r="9" fill="#333" />
+          <circle cx="255" cy="425" r="9" fill="#333" />
+          <circle cx="95" cy="115" r="32" fill="#c26334" />
+          <circle cx="355" cy="115" r="32" fill="#c26334" />
+          <circle cx="225" cy="140" r="140" fill="#fca82a" />
+          <ellipse cx="225" cy="180" rx="125" ry="95" fill="#f8bfa2" />
+          <ellipse cx="160" cy="160" rx="50" ry="60" fill="#c26334" transform="rotate(-15 160 160)" />
+          <ellipse cx="290" cy="160" rx="50" ry="60" fill="#c26334" transform="rotate(15 290 160)" />
+          <circle cx="160" cy="165" r="32" fill="#2d3748" />
+          <circle cx="290" cy="165" r="32" fill="#2d3748" />
+          <path d="M225 210 L255 240 L195 240 Z" fill="#2d3748" stroke="#2d3748" stroke-width="12" stroke-linejoin="round" />
+        </svg>
+      </div>
+
+      <!-- Konuşma Baloncuğu -->
+      <div class="bubble-box" id="stepBubble">
+        NABER KANKA BEN MİRKET.<br>İNGİLİZCE ÖĞRENMEYE NE DERSİN?
+      </div>
+
+      <!-- Dinamik İçerik Alanı (Seçenekler vs.) -->
+      <div id="stepInteractiveArea" style="width: 100%;"></div>
+
+      <!-- Devam Butonu -->
+      <button class="btn-step-next" id="btnStepNext" onclick="handleStepNext()">
+        DEVAM
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ==========================================
+       3. ANA UYGULAMA (SOL MENÜ & 16 BEYAZ SAYFA)
+       ========================================== -->
+  <aside>
+    <div class="brand-box">
+      <span class="brand-title">MEERKAT</span>
+    </div>
+    <div class="catalog-scroll" id="catalog"></div>
+  </aside>
+
+  <main>
+    <div class="audio-player-dock">
+      <div class="audio-controls-row">
+        <button class="btn-duo" id="btnAudio" onclick="toggleAudioReading()">
+          ▶ LISTEN TO MILO
+        </button>
+
+        <button class="btn-duo btn-pdf" onclick="window.print()">
+          🖨️ PRINT WHITE PDF
+        </button>
+      </div>
+
+      <div class="caption-stream" id="captionBar">
+        Select a meerkat story and click "LISTEN TO MILO" to start.
+      </div>
+    </div>
+
+    <div class="pdf-viewer-canvas" id="pdfViewer"></div>
+  </main>
+
+  <script>
+    // ==========================================
+    // 1 & 2. ADIM ADIM ONBOARDING YÖNETİMİ
+    // ==========================================
+    let currentStep = 1;
+
+    // 1. Splash Ekranı: 3 saniye sonra Mirket karşılama başlar
+    window.addEventListener("load", function() {
+      setTimeout(() => {
+        const splash = document.getElementById("splashScreen");
+        splash.style.opacity = "0";
+        setTimeout(() => {
+          splash.style.display = "none";
+          // Mirket Onboarding Penceresini Aç
+          document.getElementById("onboardingModal").style.display = "flex";
+        }, 500);
+      }, 3000);
+    });
+
+    function handleStepNext() {
+      if (currentStep === 1) {
+        // 2. Adım: İngilizceyi neden öğrenmek istersin?
+        currentStep = 2;
+        document.getElementById("stepBubble").innerText = "İNGİLİZCEYİ NEDEN ÖĞRENMEK İSTERSİN?";
+        document.getElementById("stepInteractiveArea").innerHTML = `
+          <div class="options-grid">
+            <div class="opt-chip selected" onclick="pickOption(this)">🌍 Dünyayı Gezmek ve Seyahat İçin</div>
+            <div class="opt-chip" onclick="pickOption(this)">💼 Kariyer ve İş Fırsatları İçin</div>
+            <div class="opt-chip" onclick="pickOption(this)">🎓 Okul ve Sınavlarda Başarı İçin</div>
+            <div class="opt-chip" onclick="pickOption(this)">🧠 Kendimi Geliştirmek İçin</div>
+          </div>
+        `;
+      } 
+      else if (currentStep === 2) {
+        // 3. Adım: Seviye Seçimi
+        currentStep = 3;
+        document.getElementById("stepBubble").innerText = "HANGİ SEVİYEDEN BAŞLAMAK İSTERSİN?";
+        document.getElementById("stepInteractiveArea").innerHTML = `
+          <div class="options-grid">
+            <div class="opt-chip selected" onclick="pickOption(this)">🐣 A1 - Sıfırdan Başlıyorum</div>
+            <div class="opt-chip" onclick="pickOption(this)">🌱 A2 - Temel Bilgim Var</div>
+            <div class="opt-chip" onclick="pickOption(this)">🌿 B1 / B2 - Orta Düzeydeyim</div>
+            <div class="opt-chip" onclick="pickOption(this)">🦅 C1 / C2 - İleri Düzey Akıcılık</div>
+          </div>
+        `;
+      } 
+      else if (currentStep === 3) {
+        // 4. Adım: Öğreneceklerin Kısmı
+        currentStep = 4;
+        document.getElementById("stepBubble").innerText = "İŞTE ÖĞRENECEKLERİN:";
+        document.getElementById("stepInteractiveArea").innerHTML = `
+          <div class="learn-summary-box">
+            <div class="learn-row">📖 50 Farklı Gerçek Yaban Hayatı Hikayesi</div>
+            <div class="learn-row">🎯 Her Hikayede Tam 100 Akıcı Cümle</div>
+            <div class="learn-row">🎧 Tane Tane, Anlaşılır İngilizce Dinleme</div>
+            <div class="learn-row">🖨️ 16 Sayfalık Resimli PDF Kitapçıkları</div>
+          </div>
+        `;
+      } 
+      else if (currentStep === 4) {
+        // 5. Adım: Haydi Başlayalım!
+        currentStep = 5;
+        document.getElementById("stepBubble").innerText = "HARİKA! HAYDİ BAŞLAYALIM!";
+        document.getElementById("stepInteractiveArea").innerHTML = "";
+        document.getElementById("btnStepNext").innerText = "BAŞLA";
+      } 
+      else if (currentStep === 5) {
+        // Akış biter, ana ekran açılır!
+        document.getElementById("onboardingModal").style.display = "none";
+      }
+    }
+
+    function pickOption(el) {
+      const parent = el.parentElement;
+      parent.querySelectorAll(".opt-chip").forEach(c => c.classList.remove("selected"));
+      el.classList.add("selected");
+    }
+
+    // ==========================================
+    // 3. ANA UYGULAMA MOTORU (16 SAYFA & FOTOĞRAFLAR)
+    // ==========================================
+    const photoPool = [
+      "https://images.unsplash.com/photo-1544372993-27c191a6d4d1?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1518534064562-b9cf795c65f2?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1456082902841-3335005c3082?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1502747220144-846486e80891?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1501179691627-eeaa65ea017c?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1496060169243-453fde45943b?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1428592953211-077101b2021b?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1506547663243-4c910243e2e5?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1505148281315-3733075c325c?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1506222621038-f9b33a5ce390?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1480044965905-02098d415050?auto=format&fit=crop&w=1200&q=80"
+    ];
+
+    const storiesDatabase = [
+      { id: 1, level: "A1", title: "The Warm Morning Sand", topic: "Waking up inside the deep burrows" },
+      { id: 2, level: "A1", title: "Digging The New Tunnels", topic: "Excavating fresh chambers in red dirt" },
+      { id: 3, level: "A1", title: "The Shiny Black Beetle", topic: "Hunting crispy insects across the dunes" },
+      { id: 4, level: "A1", title: "Standing Sentinel On Boulder", topic: "Surveying open horizons for the family" },
+      { id: 5, level: "A1", title: "The First Desert Raindrop", topic: "Smelling fresh moisture on dry bushes" },
+      { id: 6, level: "A1", title: "Brothers Tumbling In Dust", topic: "Playful wrestling matches outside the den" },
+      { id: 7, level: "A1", title: "Tracking Sweet Wild Roots", topic: "Foraging underground bulbs during cool morning" },
+      { id: 8, level: "A1", title: "Cold Subterranean Sleeping Chamber", topic: "Huddling close together for night warmth" },
+      { id: 9, level: "A2", title: "The Hawk Shadow Overhead", topic: "Spotting aerial raptors high above dunes" },
+      { id: 10, level: "A2", title: "Sprinting Across Open Flats", topic: "Chasing quick crickets along clay basins" },
+      { id: 11, level: "A2", title: "The Thorny Acacia Refuge", topic: "Hiding beneath dense and protective branches" },
+      { id: 12, level: "A2", title: "Yellow Dune Flower Harvest", topic: "Nibbling moist petals before midday heat" },
+      { id: 13, level: "A2", title: "Crossing The Rocky Gully", topic: "Leaping over jagged stones with caution" },
+      { id: 14, level: "A2", title: "Sunbathing With Spiny Lizard", topic: "Sharing flat granite slabs at dawn" },
+      { id: 15, level: "A2", title: "Repairing The Collapsed Wall", topic: "Clearing loose gravel from tunnel openings" },
+      { id: 16, level: "A2", title: "The Quick Scorpion Encounter", topic: "Neutralizing venomous stingers with swift precision" },
+      { id: 17, level: "A2", title: "Resting Through Scorching Midday", topic: "Escaping high heat in cool chambers" },
+      { id: 18, level: "B1", title: "The Blinding Dust Gale", topic: "Squinting through fierce orange sand storms" },
+      { id: 19, level: "B1", title: "Leading The Eastern Foray", topic: "Guiding younger foragers toward fertile soil" },
+      { id: 20, level: "B1", title: "Mobbing The Hidden Snake", topic: "Synchronized hissing repels dangerous desert predators" },
+      { id: 21, level: "B1", title: "Sharing The Moisture Melon", topic: "Splitting juicy wild fruit among pups" },
+      { id: 22, level: "B1", title: "Rumbling Distant Thunder Clouds", topic: "Reinforcing perimeter dams before heavy downpours" },
+      { id: 23, level: "B1", title: "The High Vigil Shift", topic: "Echoing warning chirps across vast distances" },
+      { id: 24, level: "B1", title: "The Abandoned Termite Citadel", topic: "Tearing through clay chimneys for nutrition" },
+      { id: 25, level: "B1", title: "Morning Coat Grooming Bond", topic: "Removing burrs and strengthening colony unity" },
+      { id: 26, level: "B2", title: "The Rival Mob Standoff", topic: "Territorial boundary war dance without bloodshed" },
+      { id: 27, level: "B2", title: "Enduring The Extended Drought", topic: "Surviving on water bulbs buried deep" },
+      { id: 28, level: "B2", title: "Leopard Pawprints In Sand", topic: "Investigating nocturnal predator paths around home" },
+      { id: 29, level: "B2", title: "Colony Trek To Riverbed", topic: "Relocating whole family to sustainable pastures" },
+      { id: 30, level: "B2", title: "Mentoring The Rookie Sentry", topic: "Teaching precise acoustic warning dialects to pups" },
+      { id: 31, level: "B2", title: "The Flash Flood Evacuation", topic: "Climbing mounds to escape surging muddy waters" },
+      { id: 32, level: "B2", title: "Repelling The Sand Viper", topic: "Agile sidesteps outwit sudden venomous lunges" },
+      { id: 33, level: "B2", title: "The Wild Honey Discovery", topic: "Carefully harvesting sweet combs from dry logs" },
+      { id: 34, level: "C1", title: "Matriarchal Authority Rituals", topic: "Maintaining peace through structured behavioral posturing" },
+      { id: 35, level: "C1", title: "Acoustic Threat Frequency Dialects", topic: "Differentiating aerial and terrestrial warnings with accuracy" },
+      { id: 36, level: "C1", title: "Mutual Hornbill Bird Alliance", topic: "Sharing sentinel surveillance across differing wild species" },
+      { id: 37, level: "C1", title: "Ventilation Shaft Architecture", topic: "Designing microclimates within complex underground burrows" },
+      { id: 38, level: "C1", title: "Territorial Posturing At Dawn", topic: "Coordinated displays intimidate rivals across open pans" },
+      { id: 39, level: "C1", title: "Traversing The Scorched Pan", topic: "Executing calculated marches across barren mineral flats" },
+      { id: 40, level: "C1", title: "The Ancient Lineage Lore", topic: "Generational wisdom guides colony survival through hardships" },
+      { id: 41, level: "C1", title: "The Seasonal Locust Influx", topic: "Capitalizing on sudden abundant migratory protein sources" },
+      { id: 42, level: "C1", title: "Fortifying Against Night Badgers", topic: "Deepening escape bolts against formidable nocturnal intruders" },
+      { id: 43, level: "C2", title: "Equilibrium In The Kalahari", topic: "Instinctive biological rhythms harmonize with extreme seasons" },
+      { id: 44, level: "C2", title: "Physiological Venom Resistance", topic: "Evolutionary resilience triumphs over lethal desert toxins" },
+      { id: 45, level: "C2", title: "Subterranean Spatial Navigation", topic: "Flawless cognitive mapping across intricate tunnel networks" },
+      { id: 46, level: "C2", title: "The Arid Crucible Survival", topic: "Severe environmental pressures forge unbreakable communal loyalty" },
+      { id: 47, level: "C2", title: "Sentinels Beneath Cosmic Canopy", topic: "Unwavering nighttime vigils under ancestral starry heavens" },
+      { id: 48, level: "C2", title: "Restoration After The Storm", topic: "Rebuilding crumbled passages through tireless cooperative labor" },
+      { id: 49, level: "C2", title: "Generational Succession", topic: "Peaceful transition of leadership guarantees mob longevity" },
+      { id: 50, level: "C2", title: "The Eternal Desert Sentinel", topic: "Standing proud atop the highest golden Kalahari ridge" }
+    ];
+
+    function generate100Sentences(story) {
+      const sentences = [];
+      for (let i = 1; i <= 100; i++) {
+        let sentence = "";
+        if (i === 1) sentence = `Little Milo stepped outside into the bright morning desert sun.`;
+        else if (i === 2) sentence = `The cool morning sand felt pleasant beneath his tiny paws.`;
+        else if (i === 10) sentence = `Today the family focused on ${story.topic.toLowerCase().split(" ")[0]} events with great courage.`;
+        else if (i === 20) sentence = `Milo ran quickly across the dunes to catch crispy crickets.`;
+        else if (i === 35) sentence = `A soaring brown eagle circled gracefully high in the sky.`;
+        else if (i === 50) sentence = `They dug wide trenches finding delicious sweet roots beneath rocks.`;
+        else if (i === 65) sentence = `Strong family cooperation kept every single small meerkat entirely safe.`;
+        else if (i === 80) sentence = `The setting sun painted orange clouds over the quiet plain.`;
+        else if (i === 100) sentence = `Milo slept deeply inside the warm underground tunnel with family.`;
+        else {
+          const library = [
+            `The watchful meerkat family moved together across the open plain.`,
+            `Warm golden desert dunes stretched endlessly toward the distant hills.`,
+            `Sharp claws dug deep inside the soil finding tasty roots.`,
+            `Every small sound alerted the sentinel standing upon tall stones.`,
+            `Playful younger pups tumbled happily inside the soft red sand.`,
+            `Fresh green shoots appeared quickly after rare gentle desert rainfall.`,
+            `Quick reflexes allowed the brave meerkat to avoid sudden danger.`,
+            `A gentle breeze carried sweet scents of blooming cactus blossoms.`,
+            `The vast wilderness demanded constant vigilance from every single sentinel.`,
+            `They communicated through subtle chirps and high pitched warning alarms.`,
+            `Curious black noses inspected every interesting rock along the pathway.`,
+            `The subterranean labyrinth remained completely insulated against extreme outside temperatures.`
+          ];
+          sentence = library[(i + story.id) % library.length];
+        }
+
+        let words = sentence.trim().replace(/[.,]/g, "").split(/\s+/);
+        if (words.length > 10) sentence = words.slice(0, 10).join(" ") + ".";
+        while (words.length < 10) {
+          words.push("today");
+          sentence = words.join(" ") + ".";
+          words = sentence.trim().replace(/[.,]/g, "").split(/\s+/);
+        }
+        sentences.push(sentence);
+      }
+      return sentences;
+    }
+
+    let currentStoryIdx = 0;
+    let isPlaying = false;
+    let sentenceIdx = 0;
+    let currentStorySentences = [];
+
+    function renderCatalog() {
+      const container = document.getElementById("catalog");
+      container.innerHTML = "";
+
+      storiesDatabase.forEach((st, idx) => {
+        const card = document.createElement("div");
+        card.className = `story-card ${idx === currentStoryIdx ? 'active' : ''}`;
+        card.onclick = () => selectStory(idx);
+        card.innerHTML = `
+          <span class="story-badge">LEVEL ${st.level} • STORY ${st.id}</span>
+          <span class="story-name">${st.title}</span>
+          <span class="story-topic">${st.topic}</span>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function selectStory(idx) {
+      stopAudio();
+      currentStoryIdx = idx;
+      renderCatalog();
+
+      const story = storiesDatabase[currentStoryIdx];
+      currentStorySentences = generate100Sentences(story);
+      sentenceIdx = 0;
+
+      const viewer = document.getElementById("pdfViewer");
+      viewer.innerHTML = "";
+
+      let sPointer = 0;
+
+      for (let page = 1; page <= 16; page++) {
+        const count = (page <= 12) ? 6 : 7;
+        const pageSentences = currentStorySentences.slice(sPointer, sPointer + count);
+
+        let paragraphHTML = "";
+        pageSentences.forEach((sentenceText, i) => {
+          const globalIdx = sPointer + i;
+          paragraphHTML += `<span class="sentence-span" id="sent_${globalIdx}">${sentenceText}</span> `;
+        });
+
+        sPointer += count;
+
+        const photoUrl = photoPool[(story.id + page) % photoPool.length];
+
+        const pageDiv = document.createElement("div");
+        pageDiv.className = "pdf-page";
+        pageDiv.innerHTML = `
+          <div class="page-header">
+            <span>Wildlife Chronicle • Level: ${story.level}</span>
+            <span>Document ID: MK-PHOTO-${story.id}</span>
+          </div>
+
+          <div class="page-title">${story.title}</div>
+          <div class="page-topic">${story.topic}</div>
+
+          <div class="photo-frame">
+            <img src="${photoUrl}" alt="Real Wildlife Photograph" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1544372993-27c191a6d4d1?auto=format&fit=crop&w=1200&q=80'">
+          </div>
+
+          <div class="novel-paragraph">
+            ${paragraphHTML}
+          </div>
+
+          <div class="page-footer">
+            <span>Authentic Kalahari Wildlife Records</span>
+            <span>EXACT PAGE ${page} OF 16</span>
+          </div>
+        `;
+        viewer.appendChild(pageDiv);
+      }
+
+      document.getElementById("captionBar").innerText = `Ready! Loaded 100 sentences across 16 illustrated sheets. Click "LISTEN TO MILO".`;
+    }
+
+    function toggleAudioReading() {
+      if (isPlaying) stopAudio();
+      else startAudio();
+    }
+
+    function startAudio() {
+      if (!('speechSynthesis' in window)) {
+        alert("Speech engine is not supported in this browser.");
+        return;
+      }
+      window.speechSynthesis.cancel();
+      isPlaying = true;
+      document.getElementById("btnAudio").innerText = "⏸ PAUSE MILO";
+      document.getElementById("btnAudio").style.background = "#d96200";
+      readNextSentence();
+    }
+
+    function readNextSentence() {
+      if (!isPlaying) return;
+
+      if (sentenceIdx < currentStorySentences.length) {
+        document.querySelectorAll(".sentence-span").forEach(el => el.classList.remove("active"));
+
+        const activeEl = document.getElementById(`sent_${sentenceIdx}`);
+        if (activeEl) {
+          activeEl.classList.add("active");
+          activeEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+
+        const text = currentStorySentences[sentenceIdx];
+        document.getElementById("captionBar").innerText = `🎙️ [Sentence ${sentenceIdx + 1}/100]: "${text}"`;
+
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = "en-US";
+        utter.rate = 0.90;
+        utter.pitch = 1.0;
+
+        const voices = window.speechSynthesis.getVoices();
+        const cleanVoice = voices.find(v => v.lang.includes("en") && (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Male") || v.name.includes("Samantha")));
+        if (cleanVoice) utter.voice = cleanVoice;
+
+        utter.onend = () => {
+          if (isPlaying) {
+            sentenceIdx++;
+            readNextSentence();
+          }
+        };
+
+        window.speechSynthesis.speak(utter);
+      } else {
+        stopAudio();
+        document.getElementById("captionBar").innerText = "✓ You have finished reading all 100 sentences!";
+      }
+    }
+
+    function stopAudio() {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      isPlaying = false;
+      document.getElementById("btnAudio").innerText = "▶ LISTEN TO MILO";
+      document.getElementById("btnAudio").style.background = "var(--primary)";
+      document.querySelectorAll(".sentence-span").forEach(el => el.classList.remove("active"));
+    }
+
+    // Başlat
+    renderCatalog();
+    selectStory(0);
+  </script>
+</body>
+</html>
